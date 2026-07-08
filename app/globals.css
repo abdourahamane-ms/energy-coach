@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Energy Coach — design system (d'après le handoff Claude Design)
+---------------------------------------------------------------- */
+:root {
+  /* Fonds & surfaces */
+  --background: #f6f7f4;
+  --background-alt: #eef1ec;
+  --surface: #ffffff;
+  --border: #e6e9e3;
+  --border-input: #d3d9d0;
+
+  /* Texte */
+  --foreground: #16241e;
+  --muted: #5b6b64;
+  --muted-2: #8a978f;
+
+  /* Vert primaire */
+  --primary: #16513c;
+  --primary-2: #1c6349;
+  --primary-hover: #123f2f;
+  --primary-soft: #e7f0eb;
+  --primary-soft-2: #e4f2ea;
+
+  /* Sidebar (foncée) */
+  --sidebar: #12271f;
+  --sidebar-active: #1e4736;
+  --sidebar-text: #a9bdb2;
+  --sidebar-sub: #7d968b;
+
+  /* Graphiques */
+  --g1: #16513c;
+  --g2: #4a9b7f;
+  --g3: #8fbfa8;
+  --g4: #c9a86a;
+  --g5: #a8b6ae;
+  --accent-light: #8fd0ae;
+
+  /* Accent sable (économie) */
+  --sand: #c9a86a;
+  --sand-bg: #f2ede2;
+  --sand-bg-2: #fbf6e9;
+  --sand-text: #8a6a30;
+
+  /* Impacts */
+  --impact-high: #c0503f;
+  --impact-high-bg: #fbe9e6;
+  --impact-mid: #a06a1e;
+  --impact-mid-bg: #f6ecd7;
+  --impact-low: #2f8f5b;
+  --impact-low-bg: #e4f2ea;
+  --danger: #c0503f;
+
+  --radius: 20px;
+  --shadow-card: 0 30px 60px -30px rgba(20, 50, 38, 0.35);
+  --shadow-sm: 0 1px 2px rgba(16, 36, 30, 0.05);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-alt: var(--background-alt);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-sand: var(--sand);
+  --color-sidebar: var(--sidebar);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, Segoe UI, Roboto,
+    Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.025em;
+}
+
+.ec-serif {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+}
+
+@keyframes ecfade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ec-fade {
+  animation: ecfade 0.45s ease both;
+}
+
+@layer components {
+  .ec-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+  .ec-card-float {
+    box-shadow: var(--shadow-card);
+  }
+
+  .ec-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    border-radius: 11px;
+    padding: 0.7rem 1.2rem;
+    font-size: 0.95rem;
+    transition: background 0.15s ease, opacity 0.15s ease, transform 0.05s ease,
+      border-color 0.15s ease;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .ec-btn:active {
+    transform: translateY(1px);
+  }
+  .ec-btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border: 1px solid var(--primary);
+  }
+  .ec-btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+  .ec-btn-ghost {
+    background: var(--surface);
+    color: var(--primary);
+    border: 1px solid #cdd6cd;
+  }
+  .ec-btn-ghost:hover {
+    background: var(--primary-soft);
+  }
+  .ec-btn-sand {
+    background: var(--background-alt);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+  }
+  .ec-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .ec-input,
+  .ec-select {
+    width: 100%;
+    background: #fbfcfa;
+    border: 1px solid var(--border-input);
+    border-radius: 11px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+    color: var(--foreground);
+    outline: none;
+  }
+  .ec-input:focus,
+  .ec-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+  }
+  .ec-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: var(--foreground);
+  }
+
+  .ec-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .ec-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    background: var(--background-alt);
+    color: var(--muted);
+  }
+  .ec-chip-sand {
+    background: var(--sand-bg);
+    color: var(--sand-text);
+  }
+  .ec-chip-high {
+    background: var(--impact-high-bg);
+    color: var(--impact-high);
+  }
+  .ec-chip-mid {
+    background: var(--impact-mid-bg);
+    color: var(--impact-mid);
+  }
+  .ec-chip-low {
+    background: var(--impact-low-bg);
+    color: var(--impact-low);
+  }
+}

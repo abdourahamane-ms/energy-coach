@@ -1,0 +1,295 @@
+// Energy Coach — schéma de données relationnel (SQLite pour le MVP).
+// Architecture pensée pour migrer vers PostgreSQL plus tard.
+// Note SQLite : pas d'enum natif ni de type Json -> on utilise String.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("USER") // USER | ADMIN | DEMO_USER
+  isDemo       Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+
+  housingProfile HousingProfile?
+  meterProfiles  UserMeterProfile[]
+  meterReadings  MeterReading[]
+  devices        UserDevice[]
+  habits         UserHabit[]
+  recoResults    RecommendationResult[]
+  aiAnalyses     AiAnalysis[]
+  actionPlans    ActionPlan[]
+}
+
+model HousingProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  housingType           String? // appartement | maison | studio | autre
+  surfaceM2             Float?
+  occupants             Int?
+  country               String?  @default("France")
+  city                  String?
+  mainEnergy            String? // electricite | gaz | mixte
+  hasElectricHeating    Boolean  @default(false)
+  hasGasHeating         Boolean  @default(false)
+  hasAirConditioning    Boolean  @default(false)
+  hasElectricWaterHeater Boolean @default(false)
+  monthlyBillEuro       Float?
+  monthlyConsumptionKwh Float?
+  knownKwhPrice         Float?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model MeterType {
+  id                          String  @id @default(cuid())
+  name                        String
+  slug                        String  @unique
+  energyType                  String // electricite | gaz | mixte | inconnu
+  description                 String?
+  supportsQrDemo              Boolean @default(false)
+  supportsManualEntry         Boolean @default(true)
+  supportsRealConnectionLater Boolean @default(false)
+
+  meterProfiles UserMeterProfile[]
+  meterReadings MeterReading[]
+}
+
+model UserMeterProfile {
+  id                      String    @id @default(cuid())
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meterTypeId             String
+  meterType               MeterType @relation(fields: [meterTypeId], references: [id])
+  label                   String?
+  manualMonthlyBillEuro   Float?
+  manualMonthlyKwh        Float?
+  prepaidMonthlyBudget    Float?
+  prepaidRechargeAmount   Float?
+  prepaidRechargeFrequency String?
+  demoMeterIdentifier     String?
+  isConnectedDemo         Boolean   @default(false)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
+
+model MeterReading {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meterTypeId    String?
+  meterType      MeterType? @relation(fields: [meterTypeId], references: [id])
+  periodStart    DateTime?
+  periodEnd      DateTime?
+  consumptionKwh Float?
+  costEuro       Float?
+  sourceType     String? // manual | demo | estimated
+  isDemo         Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+}
+
+model Device {
+  id                String  @id @default(cuid())
+  name              String
+  category          String
+  powerWatts        Float?
+  averageMonthlyKwh Float?
+  averageYearlyKwh  Float?
+  defaultDailyHours Float?
+  impactLevel       String? // faible | moyen | eleve
+  sourceId          String?
+  source            CalculationSource? @relation(fields: [sourceId], references: [id])
+  description       String?
+  advice            String?
+  isActive          Boolean @default(true)
+
+  userDevices UserDevice[]
+}
+
+model UserDevice {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId          String
+  device            Device   @relation(fields: [deviceId], references: [id])
+  quantity          Int      @default(1)
+  usageHoursPerDay  Float?
+  usageDaysPerMonth Float?
+  energyClass       String?
+  customPowerWatts  Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Habit {
+  id                    String  @id @default(cuid())
+  key                   String  @unique
+  question              String
+  category              String?
+  recommendationTrigger String?
+  orderIndex            Int     @default(0)
+  isActive              Boolean @default(true)
+
+  userHabits UserHabit[]
+}
+
+model UserHabit {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habitId     String
+  habit       Habit    @relation(fields: [habitId], references: [id])
+  answerValue String // jamais | rarement | parfois | souvent | tres_souvent
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, habitId])
+}
+
+model CalculationSource {
+  id           String   @id @default(cuid())
+  name         String
+  organization String?
+  url          String?
+  description  String?
+  checkedAt    DateTime?
+  isActive     Boolean  @default(true)
+
+  devices         Device[]
+  energyPrices    EnergyPrice[]
+  rules           CalculationRule[]
+  recommendations Recommendation[]
+}
+
+model EnergyPrice {
+  id          String   @id @default(cuid())
+  label       String
+  energyType  String // electricite | gaz
+  pricePerKwh Float
+  country     String   @default("France")
+  sourceId    String?
+  source      CalculationSource? @relation(fields: [sourceId], references: [id])
+  validFrom   DateTime?
+  validTo     DateTime?
+  isDefault   Boolean  @default(false)
+}
+
+model CalculationRule {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  title          String
+  description    String?
+  formulaType    String? // percentage | perDevice | fromBill
+  coefficient    Float?
+  targetCategory String?
+  sourceId       String?
+  source         CalculationSource? @relation(fields: [sourceId], references: [id])
+  isActive       Boolean  @default(true)
+
+  recommendations Recommendation[]
+}
+
+model Recommendation {
+  id                  String   @id @default(cuid())
+  key                 String   @unique
+  title               String
+  shortDescription    String?
+  detailedExplanation String?
+  category            String? // chauffage | climatisation | electromenager | multimedia | eclairage | veille | eau_chaude
+  effortLevel         String? // faible | moyen | eleve
+  impactLevel         String? // faible | moyen | eleve
+  sourceId            String?
+  source              CalculationSource? @relation(fields: [sourceId], references: [id])
+  ruleId              String?
+  rule                CalculationRule?   @relation(fields: [ruleId], references: [id])
+  isActive            Boolean  @default(true)
+
+  results    RecommendationResult[]
+  actionItems ActionItem[]
+}
+
+model RecommendationResult {
+  id                         String   @id @default(cuid())
+  userId                     String
+  user                       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendationId           String
+  recommendation             Recommendation @relation(fields: [recommendationId], references: [id])
+  estimatedMonthlySavingEuro Float?
+  estimatedYearlySavingEuro  Float?
+  estimatedMonthlySavingKwh  Float?
+  calculationDetailsJson     String? // JSON stocké en texte
+  sourceLabel                String?
+  generatedAt                DateTime @default(now())
+}
+
+model AiAnalysis {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  summary     String?
+  explanation String?
+  modelName   String?
+  usedFallback Boolean @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model ActionPlan {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String   @default("Plan d'action 30 jours")
+  durationDays Int     @default(30)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items ActionItem[]
+}
+
+model ActionItem {
+  id                         String   @id @default(cuid())
+  actionPlanId               String
+  actionPlan                 ActionPlan @relation(fields: [actionPlanId], references: [id], onDelete: Cascade)
+  recommendationId           String?
+  recommendation             Recommendation? @relation(fields: [recommendationId], references: [id])
+  title                      String
+  description                String?
+  weekNumber                 Int      @default(1)
+  estimatedMonthlySavingEuro Float?
+  isCompleted                Boolean  @default(false)
+  completedAt                DateTime?
+}
+
+model DemoProfile {
+  id             String  @id @default(cuid())
+  name           String
+  slug           String  @unique
+  description    String?
+  housingDataJson String?
+  devicesJson    String?
+  habitsJson     String?
+  meterDataJson  String?
+  qrCodePath     String?
+  qrPayload      String?
+  isActive       Boolean @default(true)
+}
+
+model AdminSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String?
+  updatedAt DateTime @updatedAt
+}
