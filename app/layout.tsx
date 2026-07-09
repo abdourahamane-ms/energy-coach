@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Newsreader } from "next/font/google";
 import "./globals.css";
 
-// Polices du design Claude (auto-hébergées par next/font, sans CDN au runtime).
+// Polices auto-hébergées par next/font, sans CDN au runtime.
 const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],

@@ -1,5 +1,5 @@
 // Logo Energy Coach : 3 barres verticales de hauteurs croissantes dans un carré
-// vert arrondi (reproduit en CSS pur, comme le design Claude).
+// vert arrondi, reproduit en CSS pur.
 export default function Logo({
   size = 34,
   withText = true,
