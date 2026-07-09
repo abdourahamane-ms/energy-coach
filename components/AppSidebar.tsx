@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   House,
   Buildings,
@@ -18,6 +17,7 @@ import {
   SignOut,
 } from "@phosphor-icons/react";
 import Logo from "@/components/Logo";
+import { logoutAction } from "@/app/actions/auth";
 
 const NAV = [
   { href: "/tableau-de-bord", label: "Tableau de bord", Icon: House },
@@ -42,15 +42,6 @@ export default function AppSidebar({
   initials: string;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  async function logout() {
-    setLoggingOut(true);
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
-    router.refresh();
-  }
 
   return (
     <div className="flex flex-col h-full bg-[var(--sidebar)] text-[var(--sidebar-text)]">
@@ -102,13 +93,14 @@ export default function AppSidebar({
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-white truncate">{name}</div>
-            <button
-              onClick={logout}
-              disabled={loggingOut}
-              className="text-xs text-[var(--sidebar-sub)] hover:text-white flex items-center gap-1"
-            >
-              <SignOut size={13} /> {loggingOut ? "…" : "Se déconnecter"}
-            </button>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                className="text-xs text-[var(--sidebar-sub)] hover:text-white flex items-center gap-1"
+              >
+                <SignOut size={13} /> Se déconnecter
+              </button>
+            </form>
           </div>
         </div>
       </div>
