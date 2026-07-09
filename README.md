@@ -2,7 +2,7 @@
 
 Energy Coach est une application web qui aide les ménages à **comprendre leur consommation d'énergie**, à recevoir des **recommandations personnalisées** et à suivre un **plan d'action sur 30 jours** pour réduire leur facture.
 
-Ce dépôt contient une première version fonctionnelle et présentable (MVP), avec une vraie base de données, une authentification, un moteur de calcul transparent, des graphiques, un mode démo et un espace administrateur.
+Ce dépôt contient une version finale de présentation, avec une vraie base de données, une authentification, un moteur de calcul transparent, des graphiques, un mode démo et un espace administrateur.
 
 ---
 
@@ -28,7 +28,7 @@ Aider l'utilisateur à :
 - Graphiques (répartition, avant/après, économies, progression du plan).
 - Plan d'action 30 jours avec actions cochables et sauvegardées.
 - Mode démo complet + simulation de compteur par QR code fixe (Linky / Gazpar / prépayé).
-- IA locale (Ollama) pour un texte de coaching, avec repli automatique si indisponible.
+- IA locale optionnelle (Ollama) pour prioriser les recommandations et formuler des explications, avec repli automatique si indisponible.
 - Espace administrateur (utilisateurs, appareils, sources, règles, recommandations, profils démo, QR codes).
 
 ## 3. Stack technique
@@ -44,7 +44,7 @@ Aider l'utilisateur à :
 
 ## 4. Prérequis
 
-- **Node.js 18+** (testé avec Node 24) et **npm**.
+- **Node.js 20.9+** (testé avec Node 24) et **npm**.
 - (Optionnel) **Ollama** installé et lancé pour l'analyse IA — voir §12.
 
 ## 5. Installation
@@ -61,7 +61,7 @@ Le fichier `.env` (déjà présent pour le développement local) contient :
 DATABASE_URL="file:./dev.db"        # base SQLite (résolue dans le dossier prisma/)
 SESSION_SECRET="..."                # secret de signature des sessions (à changer en prod)
 OLLAMA_URL="http://127.0.0.1:11434" # IA locale (optionnelle)
-OLLAMA_MODEL="llama3.2"             # modèle Ollama utilisé
+OLLAMA_MODEL="gemma3:4b"            # modèle Ollama utilisé
 ```
 
 > En production, remplacez impérativement `SESSION_SECRET` par une valeur longue et aléatoire.
@@ -89,6 +89,29 @@ npm run setup
 ```
 
 ## 8. Lancer le projet
+
+Commande recommandée sous Windows, avec vérification d'Ollama, du modèle local, de Prisma, de la base SQLite, des QR codes et du port disponible :
+
+```powershell
+cd "C:\Users\maman\Documents\energy-coach"
+powershell -ExecutionPolicy Bypass -File .\start-complet.ps1
+```
+
+Si le port `3000` est déjà occupé, le script utilise automatiquement le port libre suivant (`3001`, `3002`, etc.).
+
+Pour forcer une reconstruction du build :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start-complet.ps1 -Rebuild
+```
+
+Pour un lancement en mode développement :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start-complet.ps1 -Dev
+```
+
+Commande manuelle de développement :
 
 ```bash
 npm run dev
@@ -160,17 +183,19 @@ Si Ollama est disponible (`OLLAMA_URL`), Energy Coach lui demande un court texte
 Installer et lancer un modèle :
 
 ```bash
-ollama pull llama3.2
+ollama pull gemma3:4b
 ollama serve
 ```
 
-**Sans Ollama, l'application fonctionne normalement** : un texte de coaching de repli est généré à partir des recommandations calculées. Aucun message technique n'est affiché à l'utilisateur.
+Dans l'analyse, Ollama peut sélectionner et prioriser des recommandations déjà calculées, puis rédiger une courte raison personnalisée. Les montants, scores, coefficients et économies restent calculés par le moteur interne de l'application.
 
-## 13. Limites assumées du MVP
+**Sans Ollama, l'application fonctionne normalement** : les recommandations sont produites par le moteur de règles et un texte de repli est généré à partir des résultats calculés. Aucun message technique n'est affiché à l'utilisateur.
 
-Le MVP **ne fait pas** : connexion réelle Enedis/GRDF, récupération réelle Linky/Gazpar, solaire, batteries, coupures, délestage, groupe électrogène, génération dynamique de QR codes, promesse d'économie garantie.
+## 13. Limites assumées de la version finale
 
-Le MVP **fait** : comptes utilisateurs, base SQL persistante, mode manuel, simulation compteur par QR fixe, calculs transparents, recommandations personnalisées, IA locale explicative avec repli, graphiques, plan d'action, admin, mode démo complet.
+Cette version **ne fait pas** : connexion réelle Enedis/GRDF, récupération réelle Linky/Gazpar, solaire, batteries, coupures, délestage, groupe électrogène, génération dynamique de QR codes, promesse d'économie garantie.
+
+Cette version **fait** : comptes utilisateurs, base SQL persistante, mode manuel, simulation compteur par QR fixe, calculs transparents, recommandations personnalisées, IA locale optionnelle avec repli, graphiques, plan d'action, admin, mode démo complet.
 
 L'édition fine des profils démo (JSON) reste volontairement limitée côté admin : la principale action disponible est la **réinitialisation** du compte démo.
 
@@ -193,6 +218,7 @@ L'édition fine des profils démo (JSON) reste volontairement limitée côté ad
 | `npm run qrcodes`    | (Re)générer les QR codes fixes de démo         |
 | `npm run setup`      | Migrations + client + QR codes + seed          |
 | `npm run lint`       | Vérifier le code                               |
+| `.\start-complet.ps1` | Démarrage local complet avec Ollama            |
 
 ---
 
