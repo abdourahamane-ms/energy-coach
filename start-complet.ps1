@@ -102,6 +102,21 @@ function Ensure-Command($name, $installHint) {
     return $cmd.Source
 }
 
+function Assert-NodeVersion($minimumVersion) {
+    $rawVersion = (& node -p "process.versions.node").Trim()
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($rawVersion)) {
+        Stop-WithMessage "Impossible de lire la version de Node.js."
+    }
+
+    $current = [version]$rawVersion
+    $minimum = [version]$minimumVersion
+    if ($current -lt $minimum) {
+        Stop-WithMessage "Node.js $minimumVersion+ est requis. Version detectee : $rawVersion."
+    }
+
+    Info "Node.js $rawVersion detecte"
+}
+
 Step "Verification du dossier projet"
 if (-not (Test-Path -LiteralPath "package.json")) {
     Stop-WithMessage "package.json est introuvable. Lance ce script depuis le dossier energy-coach."
@@ -131,7 +146,8 @@ $ollamaModel = Get-DotEnvValue "OLLAMA_MODEL" "gemma3:4b"
 Step "Verification de Node.js et npm"
 Ensure-Command "node" "Installe Node.js 20.9+ puis relance." | Out-Null
 Ensure-Command "npm" "Installe Node.js avec npm puis relance." | Out-Null
-Info "Node.js et npm disponibles"
+Assert-NodeVersion "20.9.0"
+Info "npm disponible"
 
 Step "Verification des dependances npm"
 if (-not (Test-Path -LiteralPath "node_modules")) {
